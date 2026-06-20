@@ -2,6 +2,7 @@ package com.musicplayer.melodex.player
 
 import android.content.Context
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -66,8 +67,12 @@ class MusicPlayerController(context: Context) {
             MediaItem.Builder()
                 .setMediaId(song.id.toString())
                 .setUri(song.uri)
-                .setTitle(song.title)
-                .setArtist(song.artist)
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setTitle(song.title)
+                        .setArtist(song.artist)
+                        .build()
+                )
                 .build()
         }
 

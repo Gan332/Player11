@@ -93,7 +93,8 @@ fun MelodexTheme(
     val colorScheme = when {
         // Dynamic color on Android 12+ (when enabled)
         Build.VERSION.SDK_INT >= 31 && dynamicColorEnabled -> {
-            if (useDarkTheme) dynamicDarkColorScheme() else dynamicLightColorScheme()
+            val context = LocalContext.current
+            if (useDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
         else -> {
             if (useDarkTheme) DarkColorScheme else LightColorScheme

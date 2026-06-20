@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -43,7 +44,9 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            (application as MelodexApp).musicRepository.loadSongs()
+            lifecycleScope.launch {
+                (application as MelodexApp).musicRepository.loadSongs()
+            }
         }
     }
 
@@ -74,7 +77,9 @@ class MainActivity : ComponentActivity() {
         when {
             ContextCompat.checkSelfPermission(this, permission)
                 == PackageManager.PERMISSION_GRANTED -> {
-                (application as MelodexApp).musicRepository.loadSongs()
+                lifecycleScope.launch {
+                    (application as MelodexApp).musicRepository.loadSongs()
+                }
             }
             else -> {
                 requestPermissionLauncher.launch(permission)
