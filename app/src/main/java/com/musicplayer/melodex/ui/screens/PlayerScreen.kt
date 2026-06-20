@@ -1,9 +1,5 @@
 package com.musicplayer.melodex.ui.screens
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -15,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -23,7 +20,6 @@ import coil.request.ImageRequest
 import com.musicplayer.melodex.data.model.Song
 import com.musicplayer.melodex.ui.components.PlaybackProgressSlider
 import com.musicplayer.melodex.ui.components.PlayerTransportControls
-import com.musicplayer.melodex.ui.components.SongItem
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,7 +40,6 @@ fun PlayerScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Animate position for live updates
     var displayPosition by remember { mutableStateOf(0L) }
     LaunchedEffect(isPlaying) {
         while (isPlaying) {
@@ -122,7 +117,6 @@ private fun PlayerContent(
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Album art
         Surface(
             modifier = Modifier
                 .size(300.dp)
@@ -153,7 +147,6 @@ private fun PlayerContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Song info
         Text(
             text = song.title,
             style = MaterialTheme.typography.headlineSmall,
@@ -183,7 +176,6 @@ private fun PlayerContent(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Progress slider
         PlaybackProgressSlider(
             currentPosition = currentPosition,
             duration = duration,
@@ -192,7 +184,6 @@ private fun PlayerContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Transport controls
         PlayerTransportControls(
             isPlaying = isPlaying,
             isShuffled = isShuffled,
