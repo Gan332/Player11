@@ -79,29 +79,10 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                SingleChoiceSegmentedButtonRow(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    ThemeMode.entries.forEach { mode ->
-                        SegmentedButton(
-                            selected = themeMode == mode,
-                            onClick = { onThemeModeChange(mode) },
-                            label = {
-                                Text(
-                                    when (mode) {
-                                        ThemeMode.SYSTEM -> "System"
-                                        ThemeMode.LIGHT -> "Light"
-                                        ThemeMode.DARK -> "Dark"
-                                    }
-                                )
-                            },
-                            shape = SegmentedButtonDefaults.itemShape(
-                                index = mode.ordinal,
-                                count = ThemeMode.entries.size
-                            )
-                        )
-                    }
-                }
+                ThemeModeSelector(
+                    themeMode = themeMode,
+                    onThemeModeChange = onThemeModeChange
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -174,6 +155,35 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+}
+
+@Composable
+private fun ThemeModeSelector(
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit
+) {
+    SingleChoiceSegmentedButtonRow(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        SegmentedButton(
+            selected = themeMode == ThemeMode.SYSTEM,
+            onClick = { onThemeModeChange(ThemeMode.SYSTEM) },
+            label = { Text("System") },
+            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+        )
+        SegmentedButton(
+            selected = themeMode == ThemeMode.LIGHT,
+            onClick = { onThemeModeChange(ThemeMode.LIGHT) },
+            label = { Text("Light") },
+            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+        )
+        SegmentedButton(
+            selected = themeMode == ThemeMode.DARK,
+            onClick = { onThemeModeChange(ThemeMode.DARK) },
+            label = { Text("Dark") },
+            shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
+        )
     }
 }
 
