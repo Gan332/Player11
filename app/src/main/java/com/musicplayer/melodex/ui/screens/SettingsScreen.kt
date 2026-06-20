@@ -168,7 +168,6 @@ fun SettingsScreen(
 }
 
 @Composable
-@Composable
 private fun SettingsCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
