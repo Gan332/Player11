@@ -11,7 +11,7 @@ env:
   JAVA_VERSION: "17"
 
 permissions:
-  contents: read
+  contents: write
   actions: write
 
 jobs:
@@ -46,7 +46,6 @@ jobs:
         shell: bash
 
       - name: Assemble debug
-        if: success()
         run: |
           ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-build.log
         shell: bash
@@ -60,9 +59,23 @@ jobs:
           retention-days: 3
 
       - name: Upload APK
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: melodex-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 7
+
+      - name: Create GitHub Release and Upload APK
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Melodex v1.0.${{ github.run_number }}
+          body: |
+            Automated debug build from commit ${{ github.sha }}
+
+            Commit message: ${{ github.event.head_commit.message }}
+          files: app/build/outputs/apk/debug/*.apk
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
