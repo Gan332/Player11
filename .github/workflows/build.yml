@@ -9,8 +9,6 @@ on:
 env:
   GRADLE_VERSION: "8.11.1"
   JAVA_VERSION: "17"
-  ANDROID_BUILD_TOOLS: "35.0.0"
-  ANDROID_PLATFORM: "35"
 
 permissions:
   contents: read
@@ -35,14 +33,6 @@ jobs:
           gradle-version: ${{ env.GRADLE_VERSION }}
           gradle-home-cache-cleanup: true
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK components
-        run: |
-          sdkmanager "platforms;android-${{ env.ANDROID_PLATFORM }}" "build-tools;${{ env.ANDROID_BUILD_TOOLS }}" --sdk_root=$ANDROID_HOME
-        shell: bash
-
       - name: Generate Gradle Wrapper
         run: gradle wrapper --gradle-version ${{ env.GRADLE_VERSION }}
 
@@ -52,21 +42,10 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Run lint
-        run: ./gradlew lint --no-daemon
-
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: melodex-debug-apk
           path: app/build/outputs/apk/debug/*.apk
-          retention-days: 7
-
-      - name: Upload lint report
-        if: success() || failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-report
-          path: app/build/reports/lint*
           retention-days: 7

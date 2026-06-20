@@ -109,7 +109,7 @@ fun MelodexMainApp(app: MelodexApp) {
 
     // Resolve seed color
     val seedColor = remember(seedColorLong) {
-        seedColorLong?.let { Color(it) }
+        seedColorLong?.let { Color(it.toInt()) }
     }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
