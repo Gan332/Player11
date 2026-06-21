@@ -3,16 +3,20 @@ package com.musicplayer.melodex.ui.theme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toHsv
 import kotlin.math.max
 import kotlin.math.min
 
 /**
  * 从种子颜色生成 Material 3 浅色 ColorScheme。
- * 通过 HSV 色调旋转派生 primary/secondary/tertiary，调整明度饱和度生成各级颜色。
  */
 fun generateLightColorScheme(seed: Color): androidx.compose.material3.ColorScheme {
-    val hsv = seed.toHsv()
+    val hsv = FloatArray(3)
+    android.graphics.Color.RGBToHSV(
+        (seed.red * 255).toInt(),
+        (seed.green * 255).toInt(),
+        (seed.blue * 255).toInt(),
+        hsv
+    )
     val h = hsv[0]
     val s = hsv[1]
 
@@ -70,7 +74,13 @@ fun generateLightColorScheme(seed: Color): androidx.compose.material3.ColorSchem
  * 从种子颜色生成 Material 3 深色 ColorScheme。
  */
 fun generateDarkColorScheme(seed: Color): androidx.compose.material3.ColorScheme {
-    val hsv = seed.toHsv()
+    val hsv = FloatArray(3)
+    android.graphics.Color.RGBToHSV(
+        (seed.red * 255).toInt(),
+        (seed.green * 255).toInt(),
+        (seed.blue * 255).toInt(),
+        hsv
+    )
     val h = hsv[0]
     val s = hsv[1]
 

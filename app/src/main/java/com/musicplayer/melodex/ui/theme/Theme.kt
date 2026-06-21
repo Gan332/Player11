@@ -99,7 +99,7 @@ fun MelodexTheme(
         }
         // Custom seed color (when set and dynamic color is off)
         seedColorLong != null -> {
-            val seed = Color(seedColorLong.toInt())
+            val seed = Color(seedColorLong!!.toInt())
             if (useDarkTheme) generateDarkColorScheme(seed) else generateLightColorScheme(seed)
         }
         // Default static palette
