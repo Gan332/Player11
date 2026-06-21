@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -25,6 +26,7 @@ fun LibraryScreen(
     isPlaying: Boolean,
     onSongClick: (Song) -> Unit,
     onPlayerNavigate: () -> Unit,
+    onImportClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -42,6 +44,14 @@ fun LibraryScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Library") },
+                actions = {
+                    IconButton(onClick = onImportClick) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Import songs"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
@@ -55,7 +65,7 @@ fun LibraryScreen(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Icon(
-                        imageVector = if (isPlaying) Icons.Default.PlayArrow else Icons.Default.Pause,
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Now Playing",
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -93,7 +103,8 @@ fun LibraryScreen(
                 ) {
                     items(
                         items = filteredSongs,
-                        key = { it.id }
+                        key = { it.id },
+                        contentType = { "song" }
                     ) { song ->
                         SongItem(
                             song = song,

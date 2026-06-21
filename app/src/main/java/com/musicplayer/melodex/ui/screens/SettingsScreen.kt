@@ -43,6 +43,7 @@ fun SettingsScreen(
     onThemeModeChange: (ThemeMode) -> Unit,
     onDynamicColorChange: (Boolean) -> Unit,
     onSeedColorChange: (Color?) -> Unit,
+    onNavigateToStats: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -80,18 +81,24 @@ fun SettingsScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        OutlinedButton(
-                                            onClick = { onThemeModeChange(ThemeMode.SYSTEM) }
-                                        ) { Text("System") }
-                                        OutlinedButton(
-                                            onClick = { onThemeModeChange(ThemeMode.LIGHT) }
-                                        ) { Text("Light") }
-                                        OutlinedButton(
-                                            onClick = { onThemeModeChange(ThemeMode.DARK) }
-                                        ) { Text("Dark") }
-                                    }
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = themeMode == ThemeMode.SYSTEM,
+                        onClick = { onThemeModeChange(ThemeMode.SYSTEM) },
+                        label = { Text("System") }
+                    )
+                    FilterChip(
+                        selected = themeMode == ThemeMode.LIGHT,
+                        onClick = { onThemeModeChange(ThemeMode.LIGHT) },
+                        label = { Text("Light") }
+                    )
+                    FilterChip(
+                        selected = themeMode == ThemeMode.DARK,
+                        onClick = { onThemeModeChange(ThemeMode.DARK) },
+                        label = { Text("Dark") }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -127,6 +134,42 @@ fun SettingsScreen(
                     selectedColor = seedColor,
                     onColorSelected = { onSeedColorChange(it) }
                 )
+            }
+
+            // Statistics Section
+            Text(
+                text = "Statistics",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+            )
+
+            SettingsCard {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onNavigateToStats() },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.BarChart,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = "Listening statistics",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             // About Section

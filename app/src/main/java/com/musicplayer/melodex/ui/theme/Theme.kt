@@ -83,6 +83,7 @@ fun MelodexTheme(
 ) {
     val themeMode by themePreferences.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
     val dynamicColorEnabled by themePreferences.dynamicColorEnabled.collectAsState(initial = true)
+    val seedColorLong by themePreferences.seedColor.collectAsState(initial = null)
 
     val useDarkTheme = when (themeMode) {
         ThemeMode.LIGHT -> false
@@ -96,6 +97,12 @@ fun MelodexTheme(
             val context = LocalContext.current
             if (useDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
+        // Custom seed color (when set and dynamic color is off)
+        seedColorLong != null -> {
+            val seed = Color(seedColorLong.toInt())
+            if (useDarkTheme) generateDarkColorScheme(seed) else generateLightColorScheme(seed)
+        }
+        // Default static palette
         else -> {
             if (useDarkTheme) DarkColorScheme else LightColorScheme
         }
