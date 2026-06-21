@@ -1,7 +1,6 @@
 package com.musicplayer.melodex.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -17,12 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.musicplayer.melodex.data.preference.ThemeMode
 
 private val presetColors = listOf(
-    Color(0xFF6750A4), // Purple (MD3 default)
+    Color(0xFF4A5CF7), // Blue-Purple (default)
     Color(0xFF1976D2), // Blue
     Color(0xFF00897B), // Teal
     Color(0xFF43A047), // Green
@@ -49,7 +48,13 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = {
+                    Text(
+                        "Settings",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
@@ -63,45 +68,50 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
         ) {
-            // Theme Preference Section
-            Text(
-                text = "Theme",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
-            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // ── Theme Preference Section ──
+            SectionHeader("Theme")
 
             // Theme Mode
             SettingsCard {
                 Text(
                     text = "Theme mode",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FilterChip(
-                        selected = themeMode == ThemeMode.SYSTEM,
-                        onClick = { onThemeModeChange(ThemeMode.SYSTEM) },
-                        label = { Text("System") }
-                    )
-                    FilterChip(
-                        selected = themeMode == ThemeMode.LIGHT,
-                        onClick = { onThemeModeChange(ThemeMode.LIGHT) },
-                        label = { Text("Light") }
-                    )
-                    FilterChip(
-                        selected = themeMode == ThemeMode.DARK,
-                        onClick = { onThemeModeChange(ThemeMode.DARK) },
-                        label = { Text("Dark") }
-                    )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ThemeMode.entries.forEach { mode ->
+                        FilterChip(
+                            selected = themeMode == mode,
+                            onClick = { onThemeModeChange(mode) },
+                            label = {
+                                Text(
+                                    when (mode) {
+                                        ThemeMode.SYSTEM -> "System"
+                                        ThemeMode.LIGHT -> "Light"
+                                        ThemeMode.DARK -> "Dark"
+                                    },
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                            },
+                            leadingIcon = if (themeMode == mode) {
+                                { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
+                            } else null,
+                            shape = MaterialTheme.shapes.small,
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Dynamic color toggle
             SettingsCard {
@@ -110,10 +120,11 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "Dynamic colors",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             text = "Use wallpaper-based color scheme (Android 12+)",
@@ -123,26 +134,26 @@ fun SettingsScreen(
                     }
                     Switch(
                         checked = dynamicColorEnabled,
-                        onCheckedChange = onDynamicColorChange
+                        onCheckedChange = onDynamicColorChange,
+                        colors = SwitchDefaults.colors(
+                            checkedTrackColor = MaterialTheme.colorScheme.primary
+                        )
                     )
                 }
             }
 
-            if (!dynamicColorEnabled) {
-                Spacer(modifier = Modifier.height(8.dp))
-                SeedColorPicker(
-                    selectedColor = seedColor,
-                    onColorSelected = { onSeedColorChange(it) }
-                )
+            AnimatedVisibility(visible = !dynamicColorEnabled) {
+                Column {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SeedColorPicker(
+                        selectedColor = seedColor,
+                        onColorSelected = onSeedColorChange
+                    )
+                }
             }
 
-            // Statistics Section
-            Text(
-                text = "Statistics",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
-            )
+            // ── Statistics Section ──
+            SectionHeader("Statistics")
 
             SettingsCard {
                 Row(
@@ -156,12 +167,14 @@ fun SettingsScreen(
                         Icon(
                             imageVector = Icons.Default.BarChart,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
                             text = "Listening statistics",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                     Icon(
@@ -172,13 +185,8 @@ fun SettingsScreen(
                 }
             }
 
-            // About Section
-            Text(
-                text = "About",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
-            )
+            // ── About Section ──
+            SectionHeader("About")
 
             SettingsCard {
                 Row(
@@ -189,25 +197,44 @@ fun SettingsScreen(
                     Column {
                         Text(
                             text = "Melodex",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "A modern MD3 music player",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "A modern M3 Expressive music player",
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Text(
-                        text = "v1.0.0",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    ) {
+                        Text(
+                            text = "v1.0.0",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(48.dp))
         }
     }
+}
+
+@Composable
+private fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(top = 28.dp, bottom = 10.dp)
+    )
 }
 
 @Composable
@@ -215,14 +242,14 @@ private fun SettingsCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(20.dp),
             content = content
         )
     }
@@ -234,18 +261,19 @@ private fun SeedColorPicker(
     onColorSelected: (Color?) -> Unit
 ) {
     Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(20.dp)
         ) {
             Text(
                 text = "Seed color",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -253,62 +281,70 @@ private fun SeedColorPicker(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 // Reset option
                 item {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Surface(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .clickable { onColorSelected(null) },
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            border = if (selectedColor == null)
-                                androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-                            else null
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = "A",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Auto",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    ColorDot(
+                        color = null,
+                        isSelected = selectedColor == null,
+                        onClick = { onColorSelected(null) },
+                        label = "Auto"
+                    )
                 }
 
                 items(presetColors) { color ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Surface(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .clickable { onColorSelected(color) },
-                            shape = CircleShape,
-                            color = color,
-                            border = if (selectedColor == color)
-                                androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-                            else null
-                        ) {}
-                    }
+                    ColorDot(
+                        color = color,
+                        isSelected = selectedColor == color,
+                        onClick = { onColorSelected(color) }
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ColorDot(
+    color: Color?,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    label: String? = null
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Surface(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .clickable(onClick = onClick),
+            shape = CircleShape,
+            color = color ?: MaterialTheme.colorScheme.surfaceVariant,
+            border = if (isSelected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
+            else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        ) {
+            if (color == null) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "A",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+        if (label != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (isSelected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

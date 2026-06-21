@@ -1,5 +1,7 @@
 package com.musicplayer.melodex.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -7,11 +9,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -28,15 +32,33 @@ fun SongItem(
     modifier: Modifier = Modifier,
     avatarSize: Dp = 56.dp
 ) {
+    val containerColor by animateColorAsState(
+        targetValue = if (isPlaying)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+        else
+            MaterialTheme.colorScheme.surface,
+        animationSpec = tween(300),
+        label = "song_item_bg"
+    )
+
+    val titleColor by animateColorAsState(
+        targetValue = if (isPlaying)
+            MaterialTheme.colorScheme.primary
+        else
+            MaterialTheme.colorScheme.onSurface,
+        animationSpec = tween(300),
+        label = "song_item_title"
+    )
+
     ListItem(
         headlineContent = {
             Text(
                 text = song.title,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = if (isPlaying) FontWeight.Bold else FontWeight.Normal,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = if (isPlaying) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurface
+                color = titleColor
             )
         },
         supportingContent = {
@@ -53,14 +75,13 @@ fun SongItem(
                 albumArtUri = song.albumArtUri,
                 modifier = Modifier
                     .size(avatarSize)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(MaterialTheme.shapes.small)
             )
         },
-        colors = ListItemDefaults.colors(
-            containerColor = if (isPlaying) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                            else MaterialTheme.colorScheme.surface
-        ),
-        modifier = modifier.clickable(onClick = onClick)
+        colors = ListItemDefaults.colors(containerColor = containerColor),
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 2.dp)
     )
 }
 
@@ -83,14 +104,14 @@ fun AlbumArt(
     } else {
         Surface(
             modifier = modifier,
-            shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant
+            shape = MaterialTheme.shapes.small,
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Default.MusicNote,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f),
                     modifier = Modifier.size(24.dp)
                 )
             }

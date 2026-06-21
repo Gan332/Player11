@@ -3,18 +3,28 @@ package com.musicplayer.melodex.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.musicplayer.melodex.data.preference.ThemeMode
 import com.musicplayer.melodex.data.preference.ThemePreferences
+
+// ── M3 Expressive Shapes — 更大圆角，更独特的形状语言 ──
+val ExpressiveShapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(20.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(36.dp)
+)
 
 private val LightColorScheme = lightColorScheme(
     primary = LightPrimary,
@@ -122,7 +132,7 @@ fun MelodexTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = MelodexTypography,
-        shapes = MaterialTheme.shapes, // MD3 default shapes
+        shapes = ExpressiveShapes,
         content = content
     )
 }
