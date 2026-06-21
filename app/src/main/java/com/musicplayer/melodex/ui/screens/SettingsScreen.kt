@@ -4,8 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -20,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.musicplayer.melodex.data.preference.ThemeMode
+import com.musicplayer.melodex.ui.components.ColorPickerDialog
 
 private val presetColors = listOf(
     Color(0xFF4A5CF7), // Blue-Purple (default)
@@ -261,6 +260,16 @@ private fun SeedColorPicker(
     selectedColor: Color?,
     onColorSelected: (Color?) -> Unit
 ) {
+    var showColorPicker by remember { mutableStateOf(false) }
+
+    if (showColorPicker) {
+        ColorPickerDialog(
+            initialColor = selectedColor ?: Color(0xFF4A5CF7),
+            onColorSelected = { color -> onColorSelected(color) },
+            onDismiss = { showColorPicker = false }
+        )
+    }
+
     Surface(
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
@@ -284,24 +293,39 @@ private fun SeedColorPicker(
             )
             Spacer(modifier = Modifier.height(14.dp))
 
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            // Preset colors + custom picker
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Reset option
-                item {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    // Reset option
                     ColorDot(
                         color = null,
                         isSelected = selectedColor == null,
                         onClick = { onColorSelected(null) },
                         label = "Auto"
                     )
+
+                    presetColors.take(6).forEach { color ->
+                        ColorDot(
+                            color = color,
+                            isSelected = selectedColor == color,
+                            onClick = { onColorSelected(color) }
+                        )
+                    }
                 }
 
-                items(presetColors) { color ->
-                    ColorDot(
-                        color = color,
-                        isSelected = selectedColor == color,
-                        onClick = { onColorSelected(color) }
+                // Custom color picker button
+                FilledTonalIconButton(
+                    onClick = { showColorPicker = true },
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Colorize,
+                        contentDescription = "Custom color",
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }

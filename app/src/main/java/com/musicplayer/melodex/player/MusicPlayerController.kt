@@ -121,7 +121,7 @@ class MusicPlayerController(
         positionJob = scope.launch {
             while (true) {
                 _currentPosition.value = exoPlayer.currentPosition.coerceAtLeast(0)
-                delay(250)
+                delay(100)
             }
         }
     }

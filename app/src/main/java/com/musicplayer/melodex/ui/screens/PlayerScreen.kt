@@ -26,8 +26,6 @@ import coil.request.ImageRequest
 import com.musicplayer.melodex.data.model.Song
 import com.musicplayer.melodex.ui.components.PlaybackProgressSlider
 import com.musicplayer.melodex.ui.components.PlayerTransportControls
-import kotlinx.coroutines.delay
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerScreen(
@@ -46,16 +44,6 @@ fun PlayerScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var displayPosition by remember { mutableStateOf(0L) }
-    LaunchedEffect(isPlaying) {
-        while (isPlaying) {
-            displayPosition = currentPosition
-            delay(250)
-        }
-    }
-    LaunchedEffect(currentPosition) {
-        displayPosition = currentPosition
-    }
 
     Scaffold(
         topBar = {
@@ -91,7 +79,7 @@ fun PlayerScreen(
             PlayerContent(
                 song = currentSong,
                 isPlaying = isPlaying,
-                currentPosition = displayPosition,
+                currentPosition = currentPosition,
                 duration = duration,
                 isShuffled = isShuffled,
                 repeatMode = repeatMode,

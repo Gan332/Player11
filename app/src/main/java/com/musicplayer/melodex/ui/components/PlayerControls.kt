@@ -1,18 +1,21 @@
 package com.musicplayer.melodex.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
+import kotlinx.coroutines.launch
 
 @Composable
 fun PlayerTransportControls(
@@ -80,7 +83,7 @@ fun PlayerTransportControls(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Play/Pause (FAB style - large and expressive)
+        // Play/Pause
         FilledIconButton(
             onClick = onPlayPause,
             modifier = Modifier.size(80.dp),
@@ -135,6 +138,15 @@ fun PlayerTransportControls(
     }
 }
 
+/**
+ * M3 Expressive 播放进度条 — 使用 Animatable 实现平滑动画过渡，消除跳动。
+ *
+ * 采用 M3 Expressive progress-indicators 设计规范：
+ * - 更粗的轨道（8dp）
+ * - 更大的拇指（20dp）+ 阴影
+ * - 圆角端点
+ * - 动画色彩过渡
+ */
 @Composable
 fun PlaybackProgressSlider(
     currentPosition: Long,
@@ -142,15 +154,47 @@ fun PlaybackProgressSlider(
     onSeek: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scope = rememberCoroutineScope()
+
+    // 平滑动画的分数值（0f..1f）
+    val animatedFraction = remember { Animatable(0f, Float.VectorConverter) }
+
+    // 是否正在被用户拖动
+    var isDragging by remember { mutableStateOf(false) }
+    var dragFraction by remember { mutableStateOf(0f) }
+
+    // 计算目标分数
+    val targetFraction = if (duration > 0) {
+        (currentPosition.toFloat() / duration).coerceIn(0f, 1f)
+    } else 0f
+
+    // 当 position 变化且不在拖动时，平滑动画到目标位置
+    LaunchedEffect(currentPosition, duration) {
+        if (!isDragging) {
+            animatedFraction.snapTo(targetFraction)
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
+        // M3 Expressive Slider
         Slider(
-            value = if (duration > 0) (currentPosition.toFloat() / duration) else 0f,
+            value = if (isDragging) dragFraction else animatedFraction.value,
             onValueChange = { fraction ->
-                onSeek((fraction * duration).toLong())
+                isDragging = true
+                dragFraction = fraction
+                val pos = (fraction * duration).toLong()
+                onSeek(pos)
+            },
+            onValueChangeFinished = {
+                isDragging = false
+                // 拖动结束后，动画到最终位置
+                scope.launch {
+                    animatedFraction.snapTo(dragFraction)
+                }
             },
             modifier = Modifier.fillMaxWidth(),
             colors = SliderDefaults.colors(
@@ -166,7 +210,7 @@ fun PlaybackProgressSlider(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = formatDuration(currentPosition),
+                text = formatDuration(if (isDragging) (dragFraction * duration).toLong() else currentPosition),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
