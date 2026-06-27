@@ -1,0 +1,107 @@
+name: Build Melodex Flutter
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    paths:
+      - 'flutter_melodex/**'
+  pull_request:
+    branches: [ "main", "master" ]
+    paths:
+      - 'flutter_melodex/**'
+
+env:
+  FLUTTER_VERSION: "3.24.0"
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter_melodex
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Flutter analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Flutter test
+        run: flutter test
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: melodex-flutter-apk
+          path: flutter_melodex/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
+
+      - name: Get version from pubspec.yaml
+        id: version
+        run: |
+          VERSION=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Create GitHub Release and Upload APK
+        if: success() && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: flutter-v${{ steps.version.outputs.version }}.${{ github.run_number }}
+          name: Melodex Flutter v${{ steps.version.outputs.version }}.${{ github.run_number }}
+          body: |
+            Flutter build from commit ${{ github.sha }}
+
+            Commit message: ${{ github.event.head_commit.message }}
+          files: flutter_melodex/build/app/outputs/flutter-apk/app-release.apk
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-ios:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: flutter_melodex
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Build iOS (no codesign)
+        run: flutter build ios --release --no-codesign
+
+      - name: Upload iOS build
+        uses: actions/upload-artifact@v4
+        with:
+          name: melodex-flutter-ios
+          path: flutter_melodex/build/ios/iphoneos/Runner.app
+          retention-days: 7
