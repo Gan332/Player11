@@ -48,23 +48,23 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   ChoiceChip(
                     label: const Text('System'),
-                    selected: themeProvider.themeMode == ThemeMode.system,
+                    selected: themeProvider.appThemeMode == AppThemeMode.system,
                     onSelected: (selected) {
-                      if (selected) themeProvider.setThemeMode(ThemeMode.system);
+                      if (selected) themeProvider.setThemeMode(AppThemeMode.system);
                     },
                   ),
                   ChoiceChip(
                     label: const Text('Light'),
-                    selected: themeProvider.themeMode == ThemeMode.light,
+                    selected: themeProvider.appThemeMode == AppThemeMode.light,
                     onSelected: (selected) {
-                      if (selected) themeProvider.setThemeMode(ThemeMode.light);
+                      if (selected) themeProvider.setThemeMode(AppThemeMode.light);
                     },
                   ),
                   ChoiceChip(
                     label: const Text('Dark'),
-                    selected: themeProvider.themeMode == ThemeMode.dark,
+                    selected: themeProvider.appThemeMode == AppThemeMode.dark,
                     onSelected: (selected) {
-                      if (selected) themeProvider.setThemeMode(ThemeMode.dark);
+                      if (selected) themeProvider.setThemeMode(AppThemeMode.dark);
                     },
                   ),
                 ],

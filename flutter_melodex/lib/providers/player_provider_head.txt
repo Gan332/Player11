@@ -1,0 +1,28 @@
+import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
+import 'dart:async';
+import '../models/song.dart';
+import '../models/lyric_line.dart';
+import '../services/audio_handler.dart';
+
+class PlayerProvider extends ChangeNotifier {
+  final MelodexAudioHandler _audioHandler;
+  
+  Song? _currentSong;
+  bool _isPlaying = false;
+  Duration _currentPosition = Duration.zero;
+  Duration _duration = Duration.zero;
+  bool _isShuffled = false;
+  LoopMode _repeatMode = LoopMode.off;
+  List<LyricLine> _lyrics = [];
+  double _playbackSpeed = 1.0;
+  bool _equalizerEnabled = false;
+  int _equalizerPreset = 0;
+  // Sleep timer
+  bool _isSleepTimerActive = false;
+  int _sleepTimerRemainingMs = 0;
+  Timer? _sleepTimer;
+
+  // Queue management
+  List<Song> _originalQueue = [];
+  int _queueIndex = -1;

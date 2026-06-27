@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:ui';
 
-enum ThemeMode { system, light, dark }
+enum AppThemeMode { system, light, dark }
 
 class ThemeProvider extends ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.system;
+  AppThemeMode _themeMode = AppThemeMode.system;
   Color? _seedColor;
   bool _dynamicColorEnabled = true;
 
-  ThemeMode get themeMode => _themeMode;
+  AppThemeMode get appThemeMode => _themeMode;
   Color? get seedColor => _seedColor;
   bool get dynamicColorEnabled => _dynamicColorEnabled;
+
+  ThemeMode get themeMode {
+    switch (_themeMode) {
+      case AppThemeMode.system:
+        return ThemeMode.system;
+      case AppThemeMode.light:
+        return ThemeMode.light;
+      case AppThemeMode.dark:
+        return ThemeMode.dark;
+    }
+  }
 
   ThemeProvider() {
     _loadPreferences();
@@ -20,14 +30,14 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final modeIndex = prefs.getInt('themeMode') ?? 0;
-    _themeMode = ThemeMode.values[modeIndex];
+    _themeMode = AppThemeMode.values[modeIndex];
     final colorValue = prefs.getInt('seedColor');
     _seedColor = colorValue != null ? Color(colorValue) : null;
     _dynamicColorEnabled = prefs.getBool('dynamicColorEnabled') ?? true;
     notifyListeners();
   }
 
-  Future<void> setThemeMode(ThemeMode mode) async {
+  Future<void> setThemeMode(AppThemeMode mode) async {
     _themeMode = mode;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
@@ -50,16 +60,5 @@ class ThemeProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('dynamicColorEnabled', enabled);
-  }
-
-  FlutterThemeMode get flutterThemeMode {
-    switch (_themeMode) {
-      case ThemeMode.system:
-        return FlutterThemeMode.system;
-      case ThemeMode.light:
-        return FlutterThemeMode.light;
-      case ThemeMode.dark:
-        return FlutterThemeMode.dark;
-    }
   }
 }
