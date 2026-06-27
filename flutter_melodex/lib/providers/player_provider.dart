@@ -52,8 +52,8 @@ class PlayerProvider extends ChangeNotifier {
     });
 
     _audioHandler.player.currentIndexStream.listen((index) {
-      if (index != null && index < _audioHandler.queue.length) {
-        _currentSong = _audioHandler.queue[index];
+      if (index != null && index < _audioHandler.songs.length) {
+        _currentSong = _audioHandler.songs[index];
         notifyListeners();
       }
     });

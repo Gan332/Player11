@@ -4,7 +4,7 @@ import '../models/song.dart';
 
 class MelodexAudioHandler extends BaseAudioHandler with SeekHandler {
   final AudioPlayer _player = AudioPlayer();
-  List<Song> _queue = [];
+  final List<Song> _songs = [];
   int _currentIndex = -1;
 
   MelodexAudioHandler() {
@@ -12,28 +12,28 @@ class MelodexAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   AudioPlayer get player => _player;
-  List<Song> get queue => _queue;
+  List<Song> get songs => _songs;
   int get currentIndex => _currentIndex;
 
   Future<void> _init() async {
-    _player.playbackEventStream.listen((event) {
+    _player.playerStateStream.listen((state) {
       _broadcastState();
     });
 
     _player.durationStream.listen((duration) {
-      if (duration != null) {
+      if (duration != null && mediaItem.value != null) {
         mediaItem.add(mediaItem.value!.copyWith(duration: duration));
       }
     });
 
-    _player.positionStream.listen((position) {
+    _player.positionStream.listen((_) {
       _broadcastState();
     });
 
     _player.currentIndexStream.listen((index) {
-      if (index != null && index < _queue.length) {
+      if (index != null && index < _songs.length) {
         _currentIndex = index;
-        mediaItem.add(_mediaItemFromSong(_queue[index]));
+        mediaItem.add(_mediaItemFromSong(_songs[index]));
       }
     });
 
@@ -69,13 +69,7 @@ class MelodexAudioHandler extends BaseAudioHandler with SeekHandler {
         MediaAction.seekBackward,
       },
       androidCompactActionIndices: const [0, 1, 2],
-      processingState: const {
-        ProcessingState.idle: AudioProcessingState.idle,
-        ProcessingState.loading: AudioProcessingState.loading,
-        ProcessingState.buffering: AudioProcessingState.buffering,
-        ProcessingState.ready: AudioProcessingState.ready,
-        ProcessingState.completed: AudioProcessingState.completed,
-      }[_player.processingState]!,
+      processingState: _mapProcessingState(_player.processingState),
       playing: _player.playing,
       updatePosition: _player.position,
       bufferedPosition: _player.bufferedPosition,
@@ -84,8 +78,24 @@ class MelodexAudioHandler extends BaseAudioHandler with SeekHandler {
     ));
   }
 
+  AudioProcessingState _mapProcessingState(ProcessingState state) {
+    switch (state) {
+      case ProcessingState.idle:
+        return AudioProcessingState.idle;
+      case ProcessingState.loading:
+        return AudioProcessingState.loading;
+      case ProcessingState.buffering:
+        return AudioProcessingState.buffering;
+      case ProcessingState.ready:
+        return AudioProcessingState.ready;
+      case ProcessingState.completed:
+        return AudioProcessingState.completed;
+    }
+  }
+
   Future<void> setQueue(List<Song> songs, {int startIndex = 0}) async {
-    _queue = songs;
+    _songs.clear();
+    _songs.addAll(songs);
     _currentIndex = startIndex;
 
     final audioSources = songs.map((song) {
@@ -100,7 +110,7 @@ class MelodexAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   Future<void> playSong(Song song) async {
-    final index = _queue.indexWhere((s) => s.id == song.id);
+    final index = _songs.indexWhere((s) => s.id == song.id);
     if (index >= 0) {
       _currentIndex = index;
       await _player.seek(Duration.zero, index: index);
@@ -131,11 +141,11 @@ class MelodexAudioHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> skipToNext() async {
-    if (_currentIndex < _queue.length - 1) {
+    if (_currentIndex < _songs.length - 1) {
       _currentIndex++;
       await _player.seek(Duration.zero, index: _currentIndex);
       await _player.play();
-      mediaItem.add(_mediaItemFromSong(_queue[_currentIndex]));
+      mediaItem.add(_mediaItemFromSong(_songs[_currentIndex]));
     }
   }
 
@@ -145,26 +155,21 @@ class MelodexAudioHandler extends BaseAudioHandler with SeekHandler {
       _currentIndex--;
       await _player.seek(Duration.zero, index: _currentIndex);
       await _player.play();
-      mediaItem.add(_mediaItemFromSong(_queue[_currentIndex]));
+      mediaItem.add(_mediaItemFromSong(_songs[_currentIndex]));
     }
   }
 
   Future<void> skipToIndex(int index) async {
-    if (index >= 0 && index < _queue.length) {
+    if (index >= 0 && index < _songs.length) {
       _currentIndex = index;
       await _player.seek(Duration.zero, index: index);
       await _player.play();
-      mediaItem.add(_mediaItemFromSong(_queue[index]));
+      mediaItem.add(_mediaItemFromSong(_songs[index]));
     }
   }
 
   Future<void> setShuffleMode(bool enabled) async {
-    if (enabled) {
-      await _player.setShuffleModeEnabled(true);
-      await _player.shuffle();
-    } else {
-      await _player.setShuffleModeEnabled(false);
-    }
+    await _player.setShuffleModeEnabled(enabled);
   }
 
   Future<void> setRepeatMode(LoopMode mode) async {
