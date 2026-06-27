@@ -65,12 +65,19 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 7
 
+      - name: Get version from build.gradle.kts
+        id: version
+        run: |
+          VERSION=$(grep -E "versionName\s*=\s*" app/build.gradle.kts | awk -F'"' '{print $2}')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        shell: bash
+
       - name: Create GitHub Release and Upload APK
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Melodex v1.0.${{ github.run_number }}
+          tag_name: v${{ steps.version.outputs.version }}.${{ github.run_number }}
+          name: Melodex v${{ steps.version.outputs.version }}.${{ github.run_number }}
           body: |
             Automated debug build from commit ${{ github.sha }}
 
