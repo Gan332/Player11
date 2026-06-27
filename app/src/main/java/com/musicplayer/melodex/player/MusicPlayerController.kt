@@ -1,11 +1,15 @@
 package com.musicplayer.melodex.player
 
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import com.musicplayer.melodex.data.lyrics.LyricsLoader
+import com.musicplayer.melodex.data.model.LyricLine
 import com.musicplayer.melodex.data.model.Song
 import com.musicplayer.melodex.data.repository.StatsRepository
 import kotlinx.coroutines.CoroutineScope
@@ -24,8 +28,9 @@ class MusicPlayerController(
     context: Context,
     private val statsRepository: StatsRepository? = null
 ) {
+    private val appContext = context.applicationContext
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val exoPlayer: ExoPlayer = ExoPlayer.Builder(context).build()
+    internal val exoPlayer: ExoPlayer = ExoPlayer.Builder(context).build()
 
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong.asStateFlow()
@@ -44,6 +49,18 @@ class MusicPlayerController(
 
     private val _repeatMode = MutableStateFlow(Player.REPEAT_MODE_OFF)
     val repeatMode: StateFlow<Int> = _repeatMode.asStateFlow()
+
+    private val _lyrics = MutableStateFlow<List<LyricLine>>(emptyList())
+    val lyrics: StateFlow<List<LyricLine>> = _lyrics.asStateFlow()
+
+    // ── 睡眠定时器 ──
+    private val _sleepTimerRemainingMs = MutableStateFlow(0L)
+    val sleepTimerRemainingMs: StateFlow<Long> = _sleepTimerRemainingMs.asStateFlow()
+
+    private val _isSleepTimerActive = MutableStateFlow(false)
+    val isSleepTimerActive: StateFlow<Boolean> = _isSleepTimerActive.asStateFlow()
+
+    private var sleepTimerJob: Job? = null
 
     private var songQueue: List<Song> = emptyList()
     private var currentIndex = -1
@@ -104,6 +121,9 @@ class MusicPlayerController(
                             statsRepository?.recordPlay(newSong)
                         }
                     }
+
+                    // 加载歌词
+                    loadLyricsFor(newSong)
                 }
             }
 
@@ -153,6 +173,13 @@ class MusicPlayerController(
     }
 
     fun play() {
+        // 启动前台服务以支持后台播放
+        val intent = Intent(appContext, PlaybackService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            appContext.startForegroundService(intent)
+        } else {
+            appContext.startService(intent)
+        }
         exoPlayer.play()
     }
 
@@ -203,6 +230,50 @@ class MusicPlayerController(
 
     fun isPlayingSong(song: Song): Boolean =
         _currentSong.value?.id == song.id && _isPlaying.value
+
+    /** 为指定歌曲异步加载歌词 */
+    private fun loadLyricsFor(song: Song) {
+        scope.launch(Dispatchers.IO) {
+            val loaded = LyricsLoader.loadLyrics(appContext, song)
+            _lyrics.value = loaded ?: emptyList()
+        }
+    }
+
+    /** 手动设置歌词（用于在线歌词或测试） */
+    fun setLyrics(lyrics: List<LyricLine>) {
+        _lyrics.value = lyrics
+    }
+
+    /** 清除当前歌词 */
+    fun clearLyrics() {
+        _lyrics.value = emptyList()
+    }
+
+    // ── 睡眠定时器 ──
+
+    fun startSleepTimer(durationMs: Long) {
+        cancelSleepTimer()
+        _isSleepTimerActive.value = true
+        _sleepTimerRemainingMs.value = durationMs
+        sleepTimerJob = scope.launch {
+            var remaining = durationMs
+            while (remaining > 0) {
+                delay(1000)
+                remaining -= 1000
+                _sleepTimerRemainingMs.value = remaining.coerceAtLeast(0)
+            }
+            pause()
+            _isSleepTimerActive.value = false
+            _sleepTimerRemainingMs.value = 0L
+        }
+    }
+
+    fun cancelSleepTimer() {
+        sleepTimerJob?.cancel()
+        sleepTimerJob = null
+        _isSleepTimerActive.value = false
+        _sleepTimerRemainingMs.value = 0L
+    }
 
     fun release() {
         stopPositionUpdates()

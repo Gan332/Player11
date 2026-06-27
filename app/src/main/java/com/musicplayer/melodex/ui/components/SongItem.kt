@@ -2,10 +2,14 @@ package com.musicplayer.melodex.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -23,14 +27,17 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.musicplayer.melodex.data.model.Song
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SongItem(
     song: Song,
     isPlaying: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    avatarSize: Dp = 56.dp
+    avatarSize: Dp = 56.dp,
+    isFavorite: Boolean = false,
+    onToggleFavorite: (() -> Unit)? = null,
+    onLongPress: (() -> Unit)? = null
 ) {
     val containerColor by animateColorAsState(
         targetValue = if (isPlaying)
@@ -78,9 +85,25 @@ fun SongItem(
                     .clip(MaterialTheme.shapes.small)
             )
         },
+        trailingContent = if (onToggleFavorite != null) {
+            {
+                IconButton(onClick = { onToggleFavorite() }, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                        tint = if (isFavorite) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        } else null,
         colors = ListItemDefaults.colors(containerColor = containerColor),
         modifier = modifier
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongPress
+            )
             .padding(horizontal = 8.dp, vertical = 2.dp)
     )
 }

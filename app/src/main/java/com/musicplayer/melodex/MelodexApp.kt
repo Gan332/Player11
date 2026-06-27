@@ -4,6 +4,7 @@ import android.app.Application
 import com.musicplayer.melodex.data.db.MelodexDatabase
 import com.musicplayer.melodex.data.preference.ThemePreferences
 import com.musicplayer.melodex.data.repository.MusicRepository
+import com.musicplayer.melodex.data.repository.PlaylistRepository
 import com.musicplayer.melodex.data.repository.StatsRepository
 import com.musicplayer.melodex.player.MusicPlayerController
 
@@ -21,10 +22,14 @@ class MelodexApp : Application() {
     lateinit var statsRepository: StatsRepository
         private set
 
+    lateinit var playlistRepository: PlaylistRepository
+        private set
+
     override fun onCreate() {
         super.onCreate()
         val database = MelodexDatabase.getInstance(this)
         statsRepository = StatsRepository(database.playStatDao())
+        playlistRepository = PlaylistRepository(database.playlistDao())
         musicRepository = MusicRepository(this)
         musicPlayerController = MusicPlayerController(this, statsRepository)
         themePreferences = ThemePreferences(this)

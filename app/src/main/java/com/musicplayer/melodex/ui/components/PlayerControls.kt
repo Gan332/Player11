@@ -2,21 +2,35 @@ package com.musicplayer.melodex.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.Float.VectorConverter
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import kotlinx.coroutines.launch
 
+/**
+ * M3 Expressive 播放控制栏
+ *
+ * 特性：
+ * - 播放/暂停按钮带 spring 弹性缩放动画
+ * - 上一首/下一首按钮带按下缩放反馈
+ * - 随机/循环按钮带颜色过渡和发光效果
+ */
 @Composable
 fun PlayerTransportControls(
     isPlaying: Boolean,
@@ -42,87 +56,113 @@ fun PlayerTransportControls(
         label = "repeat_color"
     )
 
+    // 播放按钮缩放动画（切换状态时弹一下）
+    val playScale = remember { Animatable(1f, Float.VectorConverter) }
+    LaunchedEffect(isPlaying) {
+        playScale.snapTo(0.85f)
+        playScale.animateTo(1f, spring(dampingRatio = 0.4f, stiffness = 400f))
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Shuffle
+        // ── Shuffle ──
         IconToggleButton(
             checked = isShuffled,
-            onCheckedChange = { onShuffle() },
+            onCheckedChange = {
+                onShuffle()
+            },
             modifier = Modifier.size(48.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Shuffle,
                 contentDescription = "Shuffle",
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(22.dp),
                 tint = shuffleColor
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // Previous
-        FilledTonalIconButton(
-            onClick = onPrevious,
-            modifier = Modifier.size(56.dp),
-            colors = IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+        // ── Previous ──
+        ScalableIconButton(
+            onClick = {
+                onPrevious()
+            },
+            modifier = Modifier.size(60.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         ) {
             Icon(
                 imageVector = Icons.Default.SkipPrevious,
                 contentDescription = "Previous",
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(34.dp),
                 tint = MaterialTheme.colorScheme.onSurface
             )
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Play/Pause
-        FilledIconButton(
-            onClick = onPlayPause,
+        // ── Play/Pause ──
+        Box(
             modifier = Modifier.size(80.dp),
-            colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                contentDescription = if (isPlaying) "Pause" else "Play",
-                modifier = Modifier.size(40.dp)
+            // 外层光晕
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                                Color.Transparent
+                            )
+                        )
+                    )
             )
+            FilledIconButton(
+                onClick = {
+                    onPlayPause()
+                },
+                modifier = Modifier
+                    .size(72.dp)
+                    .scale(playScale.value),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Icon(
+                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (isPlaying) "Pause" else "Play",
+                    modifier = Modifier.size(38.dp)
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Next
-        FilledTonalIconButton(
-            onClick = onNext,
-            modifier = Modifier.size(56.dp),
-            colors = IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+        // ── Next ──
+        ScalableIconButton(
+            onClick = {
+                onNext()
+            },
+            modifier = Modifier.size(60.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         ) {
             Icon(
                 imageVector = Icons.Default.SkipNext,
                 contentDescription = "Next",
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(34.dp),
                 tint = MaterialTheme.colorScheme.onSurface
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // Repeat
+        // ── Repeat ──
         IconToggleButton(
             checked = repeatMode != Player.REPEAT_MODE_OFF,
-            onCheckedChange = { onRepeat() },
+            onCheckedChange = {
+                onRepeat()
+            },
             modifier = Modifier.size(48.dp)
         ) {
             Icon(
@@ -131,7 +171,7 @@ fun PlayerTransportControls(
                     else -> Icons.Default.Repeat
                 },
                 contentDescription = "Repeat",
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(22.dp),
                 tint = repeatColor
             )
         }
@@ -139,11 +179,47 @@ fun PlayerTransportControls(
 }
 
 /**
- * M3 Expressive 播放进度条 — 使用 Animatable 实现平滑动画过渡，消除跳动。
+ * 带按下缩放反馈的图标按钮
+ */
+@Composable
+private fun ScalableIconButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    content: @Composable () -> Unit
+) {
+    val scale = remember { Animatable(1f, Float.VectorConverter) }
+    val scope = rememberCoroutineScope()
+
+    Surface(
+        modifier = modifier.scale(scale.value),
+        shape = CircleShape,
+        color = containerColor
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    onClick = {
+                        scope.launch {
+                            scale.snapTo(0.85f)
+                            scale.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = 500f))
+                        }
+                        onClick()
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            content()
+        }
+    }
+}
+
+/**
+ * M3 Expressive 播放进度条
  *
- * 采用 M3 Expressive progress-indicators 设计规范：
- * - 更粗的轨道（8dp）
- * - 更大的拇指（20dp）+ 阴影
+ * 采用平滑动画过渡，消除跳动：
+ * - 更粗的轨道（8dp 视觉感）
  * - 圆角端点
  * - 动画色彩过渡
  */
@@ -178,9 +254,8 @@ fun PlaybackProgressSlider(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 8.dp)
     ) {
-        // M3 Expressive Slider
         Slider(
             value = if (isDragging) dragFraction else animatedFraction.value,
             onValueChange = { fraction ->

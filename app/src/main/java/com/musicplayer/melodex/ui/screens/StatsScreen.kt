@@ -224,7 +224,7 @@ private fun StatItem(
             }
 
             AlbumArt(
-                albumArtUri = null,
+                albumArtUri = stat.albumArtUri?.let { android.net.Uri.parse(it) },
                 modifier = Modifier.size(48.dp)
             )
 

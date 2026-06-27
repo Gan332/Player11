@@ -30,6 +30,7 @@ class StatsRepository(private val dao: PlayStatDao) {
                     songId = song.id,
                     title = song.title,
                     artist = song.artist,
+                    albumArtUri = song.albumArtUri?.toString(),
                     playCount = 1,
                     skipCount = 0,
                     lastPlayedAt = System.currentTimeMillis(),
@@ -38,6 +39,10 @@ class StatsRepository(private val dao: PlayStatDao) {
             )
         } else {
             dao.incrementPlayCount(song.id, System.currentTimeMillis())
+            // 补全之前缺失的 albumArtUri
+            if (existing.albumArtUri == null && song.albumArtUri != null) {
+                dao.updateAlbumArtUri(song.id, song.albumArtUri.toString())
+            }
         }
     }
 
@@ -48,4 +53,20 @@ class StatsRepository(private val dao: PlayStatDao) {
     suspend fun recordPlayedDuration(songId: Long, deltaMs: Long) {
         if (deltaMs > 0) dao.addPlayedDuration(songId, deltaMs)
     }
+
+    // ── 收藏 ──
+
+    fun getFavorites(): Flow<List<PlayStatEntity>> = dao.getFavorites()
+
+    suspend fun isFavorite(songId: Long): Boolean = dao.isFavorite(songId) ?: false
+
+    suspend fun toggleFavorite(songId: Long): Boolean {
+        val current = dao.isFavorite(songId) ?: false
+        val newValue = !current
+        dao.setFavorite(songId, newValue)
+        return newValue
+    }
+
+    suspend fun updateAlbumArtUri(songId: Long, albumArtUri: String?) =
+        dao.updateAlbumArtUri(songId, albumArtUri)
 }

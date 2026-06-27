@@ -14,7 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.musicplayer.melodex.data.db.PlaylistEntity
 import com.musicplayer.melodex.data.model.Song
+import com.musicplayer.melodex.ui.components.AddToPlaylistSheet
 import com.musicplayer.melodex.ui.components.SongItem
 
 /** 搜索筛选字段 */
@@ -43,14 +45,33 @@ fun LibraryScreen(
     currentSong: Song?,
     isPlaying: Boolean,
     onSongClick: (Song) -> Unit,
-    onPlayerNavigate: () -> Unit,
     onImportClick: () -> Unit,
+    favoriteIds: Set<Long> = emptySet(),
+    onToggleFavorite: ((Song) -> Unit)? = null,
+    playlists: List<PlaylistEntity> = emptyList(),
+    onAddSongToPlaylist: (Long, Long) -> Unit = { _, _ -> },
+    onCreatePlaylistAndAddSong: (String, Long) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var activeFilter by remember { mutableStateOf(SearchFilter.ALL) }
     var activeSort by remember { mutableStateOf(SortOption.TITLE_ASC) }
     var showSortMenu by remember { mutableStateOf(false) }
+    var songToAddToPlaylist by remember { mutableStateOf<Song?>(null) }
+
+    // 显示添加到歌单底部弹出面板
+    songToAddToPlaylist?.let { song ->
+        AddToPlaylistSheet(
+            playlists = playlists,
+            onPlaylistSelected = { playlistId ->
+                onAddSongToPlaylist(playlistId, song.id)
+            },
+            onCreateNew = { name ->
+                onCreatePlaylistAndAddSong(name, song.id)
+            },
+            onDismiss = { songToAddToPlaylist = null }
+        )
+    }
 
     val filteredAndSortedSongs = remember(songs, searchQuery, activeFilter, activeSort) {
         val filtered = if (searchQuery.isBlank()) songs
@@ -99,25 +120,6 @@ fun LibraryScreen(
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
-        },
-        floatingActionButton = {
-            AnimatedVisibility(
-                visible = currentSong != null,
-                enter = scaleIn() + fadeIn(),
-                exit = scaleOut() + fadeOut()
-            ) {
-                SmallFloatingActionButton(
-                    onClick = onPlayerNavigate,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    shape = MaterialTheme.shapes.extraLarge
-                ) {
-                    Icon(
-                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = "Now Playing",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
         },
         modifier = modifier
     ) { padding ->
@@ -269,7 +271,10 @@ fun LibraryScreen(
                         SongItem(
                             song = song,
                             isPlaying = currentSong?.id == song.id && isPlaying,
-                            onClick = { onSongClick(song) }
+                            onClick = { onSongClick(song) },
+                            isFavorite = song.id in favoriteIds,
+                            onToggleFavorite = onToggleFavorite?.let { { it(song) } },
+                            onLongPress = { songToAddToPlaylist = song }
                         )
                     }
                 }

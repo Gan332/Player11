@@ -12,6 +12,8 @@ data class PlayStatEntity(
     val songId: Long,
     val title: String,
     val artist: String,
+    val albumArtUri: String? = null,
+    val isFavorite: Boolean = false,
     val playCount: Int = 0,
     val skipCount: Int = 0,
     val lastPlayedAt: Long = 0L,

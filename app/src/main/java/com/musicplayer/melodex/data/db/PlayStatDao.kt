@@ -53,4 +53,16 @@ interface PlayStatDao {
 
     @Query("SELECT * FROM play_stats ORDER BY playCount DESC, lastPlayedAt DESC LIMIT :limit")
     fun getTopPlayed(limit: Int): Flow<List<PlayStatEntity>>
+
+    @Query("SELECT * FROM play_stats WHERE isFavorite = 1 ORDER BY lastPlayedAt DESC")
+    fun getFavorites(): Flow<List<PlayStatEntity>>
+
+    @Query("UPDATE play_stats SET isFavorite = :isFavorite WHERE songId = :songId")
+    suspend fun setFavorite(songId: Long, isFavorite: Boolean)
+
+    @Query("SELECT isFavorite FROM play_stats WHERE songId = :songId")
+    suspend fun isFavorite(songId: Long): Boolean?
+
+    @Query("UPDATE play_stats SET albumArtUri = :albumArtUri WHERE songId = :songId")
+    suspend fun updateAlbumArtUri(songId: Long, albumArtUri: String?)
 }
